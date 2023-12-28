@@ -1,21 +1,50 @@
 #ifndef RESERVATION_H
 #define RESERVATION_H
-#include <wchar.h>
-#include "struct.h"
 
-reservations  creerReservation(int code,tdate dateA,tdate dateD,int n_chambre,clients c);
-tdate creerDate(int j,int m,int a);
-Lreservation * listeReservation(Lreservation *tete,reservations r);
-void afficheR(reservations r);
-//BlocReservation reservationToBloc(BlocReservation bloc,Lreservation *tete);
-entete readTete(FILE *file);
-void writeTete(char *nomFichier,entete e);
-LOF *openFile(char *fichier,char mode);
-reservationsPH TReservation(reservations r);
-blocRPH blocphysique(BlocReservation blocR);
-blocRPH chargerReservation(char *nomFichier,int i);
-LIndexe *insererReservation(char *nomFichier,reservations r,LIndexe *liste);
-reservations rechercheReservation(char *nomFichier,int code);
-blocRPH *tabToListR(blocRPH bloc);
+#include <stdio.h>
+#include "client.h"
+
+// Define the structure for a date
+typedef struct {
+    int day;
+    int month;
+    int year;
+} Date;
+
+// Define the structure for a reservation
+typedef struct {
+    int code;
+    Date arrivalDate;
+    Date departureDate;
+    int roomNumber;
+    Client client;
+} Reservation;
+
+// Node for linked list of reservations
+typedef struct ReservationList {
+    Reservation reservation;
+    struct ReservationList *next;
+} ReservationList;
+
+// Define the structure for the header of a file
+typedef struct {
+    int numberOfReservations;
+    // Other metadata fields can be added here
+} Header;
+
+typedef struct {
+    Reservation reservations[10];  // Array of reservations in the block
+    int numReservations;           // Number of reservations currently in the block
+} ReservationBlock;
+
+// Function prototypes
+Reservation createReservation(int code, Date dateA, Date dateD, int roomNumber, Client client);
+Date createDate(int day, int month, int year);
+ReservationList *addReservationToList(ReservationList *head, Reservation reservation);
+void displayReservations(ReservationList *head);
+Header readHeader(FILE *file);
+void writeHeader(char *filename, Header header);
+Reservation transformReservation(Reservation reservation);
+ReservationBlock convertToPhysicalBlock(ReservationBlock logicalBlock);
 
 #endif // RESERVATION_H

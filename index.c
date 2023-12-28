@@ -1,130 +1,240 @@
-//............................................................................//
-#include "struct.h"
 #include "index.h"
-#include "reservation.h"
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "struct.h"
 
-//creation de l'Index
+// Initialize the file header
+void initializeFileHeader(char* filename) {
+    IndexHeader header;
+    FILE* f = fopen(filename, "ab"); // Open the file in binary write mode
 
-EntreIndex creerIndex(int cle, int i, int j) {
-    EntreIndex in;
-    in.cle = cle;
-    in.adrs.i = i;
-    in.adrs.j = j;
-    return in;
-}
-
-//creation de la liste chainee pour les Indexs
-LIndex *ajoutIndex(int cle, int i, int j, LIndex *tete) {
-    LIndex *element = (LIndex *) malloc(sizeof(LIndex));
-    EntreIndex in = creerIndex(cle, i, j);
-    element->elem = in;
-    element->next = NULL;
-    if (tete == NULL || in.cle < tete->elem.cle) {
-        //verifi si la liste est vide ou la cle est plus petite que la cle qui se trouve dans la tete de la liste
-        element->next = tete;
-        tete = element;
-        return tete;
-    } else {
-        LIndex *tmp = tete;
-        while (tmp->next != NULL && (tmp->next->elem.cle) < in.cle) {
-            tmp = tmp->next; //element suivant pour le parcour de la liste et pour  et trouve l'emplacement de l'element
-        }
-        element->next = tmp->next;
-        tmp->next = element;
-        return tete;
+    if (f == NULL) {
+        printf("Error opening file");
+        exit(EXIT_FAILURE);
     }
+
+    // Initialize the header
+    header.numIndices = 0;
+    header.isUpdated = 0;
+    // Write the header to the file
+    fwrite(&header, sizeof(header), 1, f);
+
+    fclose(f); // Close the file
 }
 
-//pour le fichier d'Indexs
-EnteteI readTeteI(FILE *file) {
-    EnteteI e;
-    rewind(file); //mettre le curseur au debut
-    fread(&(e), sizeof(EnteteI), 1, file); //lire l'entete
-    rewind(file); //remettre le cusrseur au debut
-    return e;
+// Function to read the index header
+IndexHeader readIndexHeader(char* filename, FILE* file) {
+    IndexHeader header;
+    // Position the cursor at the beginning of the file
+    fseek(file, 0, SEEK_SET);
+    // Read header from the file
+    fread(&header, sizeof(header), 1, file);
+    return header;
 }
 
-//ecrire l'entete
-void writeTeteI(FILE *file, EnteteI e) {
-    rewind(file); //mettre le curseur au debut
-    fwrite(&(e), sizeof(EnteteI), 1, file); //ecrire l'entete
-    //rewind(file);//remettre le cusrseur au debut
+// Function to increment the number of indices in the header
+void incrementHeaderIndexCount(IndexHeader* header, FILE* f) {
+    // Update the header with the number of indices
+    header->numIndices++;
+    fseek(f, 0, SEEK_SET); // Move to the beginning of the file
+    fwrite(header, sizeof(IndexHeader), 1, f);
+    // Do not close the file here, ensure to do it elsewhere
 }
 
-void inisialisationEntete(char *nomfichier) {
-    EnteteI e;
-    FILE *f = fopen(nomfichier, "wb"); // Ouvrir le fichier en mode écriture binaire
-    e.nbr_Indexs = 0;
-    writeTeteI(f, e);
-    rewind(f);
-    fclose(f); // Fermeture du fichier
-}
+// Function to save an index
+void saveIndex(char* filename, Index index) {
+    FILE* f = fopen(filename, "ab"); // Write mode, append at the end
+    IndexHeader header;
 
-//sauvegarde les Indexs dans le fichier d'Index
-void sauvegardeIndex(LIndex *liste, char *nom_fichier) {
-    LIndex *tete = liste;
-    EnteteI e;
-    e.nbr_Indexs = 0;
-    while (tete != NULL) {
-        e.nbr_Indexs++;
-        tete = tete->next;
+    if (f == NULL) {
+        printf("Error opening file\n");
+        exit(EXIT_FAILURE);
     }
-    // printf("\n%d",e.nbr_Indexs);
-    e.maj = 1;
-    tete = liste;
-    FILE *file = fopen(nom_fichier, "wb+");
-    writeTeteI(file, e);
-    fwrite(&(e), sizeof(EnteteI), 1, file);
-    while (tete != NULL) {
-        fwrite(&(tete->elem), sizeof(EntreIndex), 1, file);
-        tete = tete->next;
-    }
-    fclose(file);
-}
 
-//charger un Index
-EntreIndex chargerIndex(char *nom_fichier) {
-    EntreIndex in;
-    FILE *f = fopen(nom_fichier, "rb");
-    fseek(f, sizeof(EnteteI),SEEK_SET);
-    fread(&(in), sizeof(EntreIndex), 1, f);
+    // Read the header
+    header = readIndexHeader(filename, f);
+
+    // Write the index to the file
+    fwrite(&index, sizeof(index), 1, f);
+
+    // Update the header
+    incrementHeaderIndexCount(&header, f);
+
+    // Close the file
     fclose(f);
-    printf("%d  %d  %d", in.cle, in.adrs.i, in.adrs.j);
-    return in;
 }
 
+// Function to save a list of indices
+void saveIndexList(char* filename, IndexList* list, FILE* f) {
+    f = fopen(filename, "ab"); // Write mode, append at the end
 
-//recherche par cle dans les Indexs
-EntreIndex rechercheIndex(char *nom_fichier, int cle) {
-    EntreIndex in;
-    FILE *f = fopen(nom_fichier, "rb");
-    EnteteI e = readTeteI(f);
-    int i = 0;
-    for (i = 0; i < e.nbr_Indexs; i++) {
-        fread(&(in), sizeof(EntreIndex), 1, f);
-        if (in.cle == cle) {
-            fclose(f);
-            return in;
+    if (f == NULL) {
+        printf("Error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Iterate through the list and write each index to the file
+    IndexList* current = list;
+    int i = 1;
+    while (current != NULL) {
+        fwrite(&(current->index), sizeof(Index), 1, f);
+        printf("Saved index number %d", i);
+        i++;
+        current = current->next;
+    }
+
+    fclose(f); // Close the file
+}
+
+// Load an index
+Index loadIndex(char* filename, FILE* f) {
+    Index index;
+    fread(&index, sizeof(index), 1, f);
+    return index;
+}
+
+// Swap the content of two nodes
+void swapIndixes(IndexList* a, IndexList* b) {
+    Index temp = a->index;
+    a->index = b->index;
+    b->index = temp;
+}
+
+// Bubble sort to sort the list by 'name' field
+void sortList(IndexList* start) {
+    int swapped;
+    IndexList *ptr;
+    IndexList *last = NULL;
+
+    // Base case: empty list or single element
+    if (start == NULL || start->next == NULL) {
+        return;
+    }
+
+    do {
+        swapped = 0;
+        ptr = start;
+
+        while (ptr->next != last) {
+            if (strcmp(ptr->index.name, ptr->next->index.name) > 0) {
+                swapIndixes(ptr, ptr->next);
+                swapped = 1;
+            }
+            ptr = ptr->next;
+        }
+        last = ptr;
+    } while (swapped);
+}
+
+// Function to display an index
+void displayIndex(Index* index) {
+    printf("Name: %s\n", index->name);
+    printf("Number of addresses: %d\n", index->numAddresses);
+    for (int i = 0; i < index->numAddresses; i++) {
+        printf("Address %d: Block %d, Position %d\n", i + 1, index->addresses[i].block, index->addresses[i].position+1);
+    }
+}
+
+// Function to display a linked list
+void displayList(IndexList* start) {
+    IndexList* current = start;
+
+    while (current != NULL) {
+        displayIndex(&(current->index));
+        current = current->next;
+        printf("\n");
+    }
+}
+
+// Function to place the index in its correct position, and if the name already exists, it adds the new address
+IndexList* placeIndex(IndexList* start, char name[50], int blockNumber, int i) {
+    int isIndexed = 0; // Check if the name is already indexed
+    IndexList* p; // For traversing the list
+    // Index and place in the linked list
+    for (p = start; p != NULL; p = p->next) { // Traverse the entire list
+        if (strcmp(name, p->index.name) == 0) {  // If the name already exists, just add the new address
+            p->index.addresses[p->index.numAddresses].block = blockNumber; // Block address
+            p->index.addresses[p->index.numAddresses].position = i;     // Offset in the block array
+            // Increment address count
+            p->index.numAddresses++;
+            // Once the name is found, exit the loop
+            isIndexed = 1;
+            break;
         }
     }
-    fclose(f);
-    printf("l'element n'existe pas");
-    return in;
-}
-
-//fonction reIndexr
-LIndex *reIndexr(char *nom_fichierR, LIndex *listeI) {
-    LIndex *tete;
-    FILE *f = fopen(nom_fichierR, "rb");
-    entete e = readTete(f); //lire l'entete
-    for (int i = 1; i <= e.nbr_bloc; i++) {
-        blocRPH bloc = chargerReservation(nom_fichierR, i); //charger les bloc un par un
-        for (int j = 0; j < bloc.nbr_enregistrement; j++) {
-            listeI = ajoutIndex(bloc.donne[j].codeR, i, j, listeI); //creation des Indexs
+    // If the name is not found
+    if (!isIndexed) {
+        // Create a new node
+        IndexList* k = malloc(sizeof(IndexList));
+        k->index.numAddresses = 1;  // Will have one address
+        strcpy(k->index.name, name); // Set the name
+        k->index.addresses[0].block = blockNumber;
+        k->index.addresses[0].position = i;
+        k->next = NULL;  // Add element at the end
+        // Add the new element to the end of the list
+        if (start == NULL) {
+            start = k; // The list is empty, update start
+        } else {
+            IndexList* last = start;
+            while (last->next != NULL) {
+                last = last->next;
+            }
+            last->next = k;
         }
     }
-    fclose(f);
-    return listeI;
+    return start;
 }
+
+
+IndexList* reIndex(char* clientFile, IndexList* start, IndexHeader* header) {
+    int blockNumber = 0;  // Keep the block position
+    int i;
+    ClientBlock block;
+    FILE *f = fopen(clientFile, "rb"); // Read mode
+
+    if (f == NULL) {
+        printf("Failure");
+        exit(EXIT_FAILURE);
+    }
+
+    // Read block by block
+    while (fread(&block, sizeof(block), 1, f) == 1) {
+        blockNumber++;
+        for (i = 0; i < block.num; i++) {
+            start = placeIndex(start, block.data[i].name, blockNumber, i);
+            incrementHeaderIndexCount(header, f);   // Increment the number of indices
+        }
+    }
+
+    fclose(f);
+    return start;
+}
+
+IndexList* addOrUpdateIndex(IndexList *head, int reservationCode, int i, int j) {
+    IndexNode *current = head;
+    while (current != NULL) {
+        if (current->entry.id == reservationCode) {
+            // Update existing entry
+            if (current->entry.numAddresses < MAX_ADDRESSES) {
+                current->entry.addresses[current->entry.numAddresses].block = i;
+                current->entry.addresses[current->entry.numAddresses].position = j;
+                current->entry.numAddresses++;
+            }
+            return head;
+        }
+        current = current->next;
+    }
+
+    // Add new entry
+    IndexNode *newNode = (IndexNode*) malloc(sizeof(IndexNode));
+    if (!newNode) return NULL;
+
+    newNode->entry.id = reservationCode;
+    newNode->entry.addresses[0].block = block;
+    newNode->entry.addresses[0].position = position;
+    newNode->entry.numAddresses = 1;
+    newNode->next = head;
+    return newNode;
+}
+

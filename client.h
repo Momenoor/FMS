@@ -1,11 +1,12 @@
-#ifndef CLIENT_H
-#define CLIENT_H
+#ifndef CLIENTS_H
+#define CLIENTS_H
 #include "struct.h"
 
-clients creerClient(int code, char nom[], char prenom[], char adresse[]);
-Lclient* listeclient(Lclient *debut, clients c);
-void affiche(Lclient *debut);
-clients rechercheClient(int code);
-void affichec(clients c);
+// Function prototypes
+Client createClient(int code, char name[], char firstName[], char address[]);
+ClientNode *addClientToList(ClientNode *head, Client client);
+void displayAllClients(ClientNode *head);
+Client* searchClient(int code, ClientNode *head);
+void displayClient(Client client);
 
-#endif // CLIENT_H
+#endif // CLIENTS_H

@@ -1,90 +1,113 @@
 #include "reservation.h"
+#include "index.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-// Create a new reservation
-reservations creerReservation(int code, tdate dateA, tdate dateD,int n_chambre, clients c) {
-    reservations r;
-    r.codeR = code;
-    r.dateA = dateA;
-    r.dateD = dateD;
-    r.n_chambre = n_chambre;
-    r.c = c;
+// Create a reservation
+Reservation createReservation(int code, Date dateA, Date dateD, int roomNumber, Client client) {
+    Reservation r;
+    r.code = code;
+    r.arrivalDate = dateA;
+    r.departureDate = dateD;
+    r.roomNumber = roomNumber;
+    r.client = client;
     return r;
 }
 
+// Create a date
+Date createDate(int day, int month, int year) {
+    Date date;
+    date.day = day;
+    date.month = month;
+    date.year = year;
+    return date;
+}
+
 // Add a reservation to the list
-Lreservation* listeReservation(Lreservation *tete, reservations r) {
-    Lreservation *nouveau = malloc(sizeof(Lreservation));
-    if (nouveau == NULL) {
+ReservationList *addReservationToList(ReservationList *head, Reservation reservation) {
+    ReservationList *newNode = malloc(sizeof(ReservationList));
+    if (newNode == NULL) {
         exit(EXIT_FAILURE);
     }
-    nouveau->r = r;
-    nouveau->next = tete;
-    return nouveau;
+    newNode->reservation = reservation;
+    newNode->next = head;
+    return newNode;
 }
 
-// Display a reservation
-void afficheR(reservations r) {
-    printf("Code Reservation: %d\n", r.codeR);
-    printf("Arrival Date: %d/%d/%d\n", r.dateA.jour, r.dateA.mois, r.dateA.annee);
-    printf("Departure Date: %d/%d/%d\n", r.dateD.jour, r.dateD.mois, r.dateD.annee);
-    printf("Room Number: %d\n", r.n_chambre);
-    printf("Client Code: %d\n", r.c.code);
-}
-
-// Display the list of reservations
-void afficheReservation(Lreservation *debut) {
-    Lreservation *actuel = debut;
-    while (actuel != NULL) {
-        afficheR(actuel->r);
-        actuel = actuel->next;
+// Display reservations
+void displayReservations(ReservationList *head) {
+    ReservationList *current = head;
+    while (current != NULL) {
+        Reservation r = current->reservation;
+        // Display logic for reservation 'r'
+        current = current->next;
     }
 }
 
-// Search for a reservation by code
-reservations rechercheReservation(char *nomFichier, int code) {
-    FILE *file = fopen(nomFichier, "r");
+// Read header from file
+Header readHeader(FILE *file) {
+    Header header;
+    fread(&header, sizeof(Header), 1, file);
+    return header;
+}
+
+// Write header to file
+void writeHeader(char *filename, Header header) {
+    FILE *file = fopen(filename, "wb");
     if (file == NULL) {
-        printf("Unable to open file: %s\n", nomFichier);
         exit(EXIT_FAILURE);
     }
-
-    reservations r;
-    while (fread(&r, sizeof(reservations), 1, file)) {
-        if (r.codeR == code) {
-            fclose(file);
-            return r;
-        }
-    }
-
+    fwrite(&header, sizeof(Header), 1, file);
     fclose(file);
-
-    // If the reservation is not found, return a reservation with code -1
-    tdate defaultDate = {0, 0, 0}; // replace with a default date if necessary
-    clients defaultClient = {0, "", "", ""}; // replace with a default client if necessary
-    return creerReservation(-1, defaultDate, defaultDate, -1, defaultClient);
 }
 
-entete readTete(FILE *file) {
-    entete e;
-    fread(&e, sizeof(entete), 1, file);
-    return e;
-}
-
-blocRPH chargerReservation(char *nomFichier, int i) {
-    FILE *file = fopen(nomFichier, "rb");
+// Open a file
+FILE *openFile(char *filename, char mode) {
+    FILE *file = fopen(filename, mode == 'r' ? "rb" : "wb");
     if (file == NULL) {
-        printf("Unable to open file: %s\n", nomFichier);
+        perror("Unable to open file");
         exit(EXIT_FAILURE);
     }
-
-    blocRPH bloc;
-    fseek(file, i * sizeof(blocRPH), SEEK_SET);
-    fread(&bloc, sizeof(blocRPH), 1, file);
-    fclose(file);
-
-    return bloc;
+    return file;
 }
 
+// Transform reservation
+Reservation transformReservation(Reservation reservation) {
+    Reservation transformed = reservation;
+    // Transform the reservation as needed
+    return transformed;
+}
 
+// Convert logical block to physical block
+ReservationBlock convertToPhysicalBlock(ReservationBlock logicalBlock) {
+    ReservationBlock physicalBlock;
+    // Conversion logic
+    return physicalBlock;
+}
+
+// Load reservation from file
+ReservationBlock loadReservation(char *filename, int blockNumber) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    ReservationBlock block;
+    fseek(file, blockNumber * sizeof(ReservationBlock), SEEK_SET);
+    fread(&block, sizeof(ReservationBlock), 1, file);
+    fclose(file);
+    return block;
+}
+
+// Insert reservation and update index
+IndexList *insertReservation(char *filename, Reservation reservation, IndexList *indexList) {
+    // Insertion logic
+    // Update index
+    return indexList;
+}
+
+// Convert block to list
+ReservationList *blockToList(ReservationBlock block) {
+    ReservationList *list = NULL;
+    // Conversion logic
+    return list;
+}
