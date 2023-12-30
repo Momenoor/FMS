@@ -1,28 +1,10 @@
 #ifndef RESERVATION_H
 #define RESERVATION_H
-
+#include "struct.h" // Assuming this includes the definition of Reservation
 #include "index.h" // Assuming this includes the definition of IndexList
-#include "client.h" // Assuming this includes the definition of IndexList
 
 // Assuming the Date structure is defined somewhere
-typedef struct {
-    int day;
-    int month;
-    int year;
-} Date;
 
-typedef struct {
-    int code;
-    Date arrivalDate;
-    Date departureDate;
-    int flightNumber;
-    Client client;
-} Reservation;
-
-typedef struct ReservationNode {
-    Reservation reservation;
-    struct ReservationNode *next;
-} ReservationNode;
 
 // Function prototypes
 Reservation createReservation(int code, Date dateA, Date dateD, int flightNumber, Client client);

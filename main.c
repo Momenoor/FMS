@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include "client.h"         // Contains client-related functions and structures
 #include "reservation.h"    // Contains reservation-related functions and structures
-#include "struct.h"         // Contains additional structure definitions
+#include "struct.h"
+#include "index.h"
+// Contains additional structure definitions
 
 int fileExists(const char* filename)
 {

@@ -1,6 +1,7 @@
-#include "index.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "struct.h"
+#include "index.h"
 
 /// Create an index
 Index createIndex(int key, int i, int j) {
