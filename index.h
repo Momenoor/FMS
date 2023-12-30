@@ -1,42 +1,41 @@
-#ifndef INDEXE_H
-#define INDEXE_H
+#ifndef INDEX_H
+#define INDEX_H
+
 #include <stdio.h>
-#include "struct.h"
+#include <stdlib.h>
 
-// Initialize the file header
-void initializeFileHeader(char* filename);
+// Forward declaration of the structure
+typedef struct IndexList IndexList;
 
-// Increment the header index count
-void incrementHeaderIndex(IndexHeader* header, FILE *f);
+typedef struct {
+    int i; // Can represent client ID or other identifiers
+    int j; // Can represent reservation ID or other identifiers
+} Address;
 
-// Save an index to a file
-void saveIndex(char* filename, Index index);
+typedef struct {
+    int key;
+    Address address;
+} Index;
 
-// Load an index from a file
-Index loadIndex(char* filename, FILE* f);
+struct IndexList {
+    Index item;
+    IndexList *next;
+};
 
-// Swap two indices in the list
-void swapIndixes(IndexList* a, IndexList* b);
 
-// Sort the index list
-void sortIndexList(IndexList* start);
+typedef struct {
+    int num_indexes; // Number of indexes
+    int updateFlag;  // Flag to indicate if the header is updated
+} IndexFileHeader;
 
-// Place an index in the list
-IndexList* placeIndex(IndexList* start, char name[50], int blockNumber, int i);
+// Function prototypes
+Index createIndex(int key, int i, int j);
+IndexList* addIndex(int key, int i, int j, IndexList *head);
+IndexFileHeader readIndexFileHeader(FILE *file);
+void writeIndexFileHeader(FILE *file, IndexFileHeader header);
+void initializeHeader(char* filename);
+void saveIndex(IndexList **list,const  char *filename);
+Index loadIndex(char *filename);
+// Include additional function prototypes here if needed
 
-// Reindex based on client file
-IndexList* reindex(char* clientFile, IndexList* start, IndexHeader* header);
-
-// Read the index header from a file
-IndexHeader readIndexHeader(char* filename, FILE* file);
-
-// Display an index
-void displayIndex(Index* index);
-
-// Display the index list
-void displayIndexList(IndexList* start);
-
-// Save a list of indices to a file
-void saveIndexList(char* filename, IndexList* list, FILE* f);
-
-#endif // INDEXE_H
+#endif // INDEX_H
